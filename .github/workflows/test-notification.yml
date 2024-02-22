@@ -1,0 +1,33 @@
+name: Manual Trigger
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: nightlies
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Manual Trigger
+        id: manual_trigger
+        run: |
+          echo "This workflow was manually triggered"
+          exit 1
+
+      - name: Report Failure
+        id: slack
+        if: failure()
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          payload: |
+            {
+              "channel_id": "${{ secrets.COMMON_COMPONENTS_CHANNEL }}",
+              "workflow_name": "${{ github.workflow }}",
+              "workflow_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.FAILED_WORKFLOW_NOTIFICATION_URL }}
